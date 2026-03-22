@@ -11,7 +11,8 @@
   --bg:#0d0d0f;--surface:#16161a;--surface2:#1e1e24;
   --border:#2a2a32;--border2:#3a3a45;
   --amber:#e8a838;--amber-dim:#9a6e1f;--amber-bg:#2a1f08;
-  --text:#e8e4da;--muted:#6b6870;--danger:#e84040;--danger-bg:#2a0808;
+  --text:#e8e4da;--muted:#6b6870;
+  --danger:#e84040;--danger-bg:#2a0808;--danger-dim:#7a2020;
   --blue:#4a9eff;--green:#4ade80;--green-bg:#0a2a1a;
   --radius:10px;
 }
@@ -20,6 +21,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   pointer-events:none;}
 
+/* ── HEADER ── */
 header{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);
   padding:18px 32px;display:flex;align-items:center;gap:16px;}
 header h1{font-family:'DM Serif Display',serif;font-size:1.6rem;letter-spacing:-0.02em;color:var(--amber);}
@@ -30,24 +32,22 @@ header .spacer{flex:1;}
 .step.done{color:var(--green);border-color:var(--green);background:var(--green-bg);}
 .step.current{color:var(--amber);border-color:var(--amber);background:var(--amber-bg);}
 
+/* ── LAYOUT ── */
 .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:32px 24px 120px;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;}
 .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .panel-header h2{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--text);flex:1;}
 .panel-body{padding:20px;}
+
 .badge{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;
   padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);}
 .badge.active{background:var(--amber-bg);border-color:var(--amber-dim);color:var(--amber);}
 
-.paste-area{width:100%;min-height:140px;background:var(--surface2);border:1px solid var(--border2);
-  border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
-  color:var(--text);resize:vertical;outline:none;line-height:1.6;}
-.paste-area:focus{border-color:var(--amber-dim);}
-.paste-hint{font-size:0.78rem;color:var(--muted);margin-top:8px;line-height:1.5;}
-
+/* ── BUTTONS ── */
 .btn{font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:400;
   padding:9px 20px;border-radius:8px;border:1px solid var(--border2);
-  background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+  background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;
+  display:inline-flex;align-items:center;gap:6px;}
 .btn:hover{background:var(--surface2);}
 .btn.primary{background:var(--amber);border-color:var(--amber);color:#0d0d0f;font-weight:500;}
 .btn.primary:hover{opacity:0.85;}
@@ -58,7 +58,39 @@ header .spacer{flex:1;}
 .btn.ghost:hover{color:var(--text);background:var(--surface2);border-color:var(--border);}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 
-/* CATEGORY BLOCK */
+/* ── STEP 1: PASTE ── */
+.paste-area{width:100%;min-height:140px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
+  color:var(--text);resize:vertical;outline:none;line-height:1.6;}
+.paste-area:focus{border-color:var(--amber-dim);}
+.paste-hint{font-size:0.78rem;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+/* ── CATEGORY MANAGEMENT ── */
+.cat-mgmt{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.cat-mgmt-item{display:flex;align-items:center;gap:8px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+.cat-mgmt-item.editing-cat{border-color:var(--amber-dim);background:#1c1a14;}
+.cat-mgmt-drag{color:var(--border2);cursor:grab;font-size:1.1rem;flex-shrink:0;user-select:none;}
+.cat-mgmt-drag:active{cursor:grabbing;}
+.cat-mgmt-name{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--amber);flex:1;}
+.cat-mgmt-count{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);margin-right:4px;}
+.cat-mgmt-actions{display:flex;gap:6px;flex-shrink:0;}
+.cat-rename-form{display:flex;gap:6px;align-items:center;flex:1;}
+.cat-rename-input{flex:1;background:var(--surface);border:1px solid var(--amber-dim);
+  border-radius:6px;padding:5px 10px;font-size:0.82rem;color:var(--text);
+  font-family:'IBM Plex Mono',monospace;outline:none;letter-spacing:0.06em;}
+.cat-rename-input:focus{border-color:var(--amber);}
+.cat-add-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.cat-add-input{flex:1;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:8px 12px;font-size:0.82rem;color:var(--text);
+  font-family:'IBM Plex Mono',monospace;outline:none;letter-spacing:0.06em;}
+.cat-add-input:focus{border-color:var(--amber-dim);}
+.cat-add-input::placeholder{color:var(--muted);}
+.cat-mgmt-item.dragging{opacity:0.35;}
+.cat-mgmt-item.drag-over{border-color:var(--amber-dim);border-style:dashed;}
+
+/* ── STATION LIST ── */
 .cat-block{margin-bottom:12px;}
 .cat-block.drag-over-cat>.cat-header{border-color:var(--amber);background:var(--amber-bg);}
 .cat-header{display:flex;align-items:center;gap:10px;padding:8px 12px;
@@ -70,10 +102,10 @@ header .spacer{flex:1;}
   text-transform:uppercase;color:var(--amber);flex:1;}
 .cat-count{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);}
 
-/* STATION ITEMS */
 .station-list-inner{display:flex;flex-direction:column;gap:6px;min-height:10px;padding:2px 0;}
 .station-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:12px 14px;display:flex;align-items:center;gap:10px;transition:border-color 0.15s;flex-wrap:wrap;}
+  padding:12px 14px;display:flex;align-items:center;gap:10px;
+  transition:border-color 0.15s;flex-wrap:wrap;}
 .station-item:hover{border-color:var(--border2);}
 .station-item.editing{border-color:var(--amber-dim);background:#1c1a14;}
 .station-item.dragging{opacity:0.35;}
@@ -92,9 +124,9 @@ header .spacer{flex:1;}
   border-radius:10px;background:var(--blue);color:#0d0d0f;letter-spacing:0.06em;}
 .station-actions{display:flex;gap:6px;flex-shrink:0;}
 
-/* EDIT FORM */
-.edit-form{width:100%;border-top:1px solid var(--border);padding-top:14px;margin-top:4px;
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+/* ── EDIT FORM ── */
+.edit-form{width:100%;border-top:1px solid var(--border);padding-top:14px;
+  margin-top:4px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .edit-form .full{grid-column:1/-1;}
 .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
   letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
@@ -107,17 +139,19 @@ header .spacer{flex:1;}
 .toggle-ext input[type=checkbox]{width:auto;accent-color:var(--amber);}
 .toggle-ext label{font-size:0.82rem;color:var(--text);cursor:pointer;}
 
-/* ADD FORM */
-.add-section{background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius);padding:20px;}
+/* ── ADD FORM ── */
+.add-section{background:var(--surface2);border:1px dashed var(--border2);
+  border-radius:var(--radius);padding:20px;}
 .add-section h3{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--amber);margin-bottom:14px;}
 .add-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .add-grid .full{grid-column:1/-1;}
 
-/* OUTPUT */
+/* ── OUTPUT ── */
 .output-box{width:100%;min-height:200px;background:var(--surface2);border:1px solid var(--border2);
   border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
   color:var(--green);resize:vertical;outline:none;line-height:1.7;}
-.copy-confirm{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--green);display:none;margin-left:8px;}
+.copy-confirm{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--green);
+  display:none;margin-left:8px;}
 .notice{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--muted);
   background:var(--surface2);border:1px solid var(--border);border-radius:6px;
   padding:10px 14px;line-height:1.7;margin-top:12px;}
@@ -127,6 +161,7 @@ header .spacer{flex:1;}
 .section-num{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--amber);
   background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:50%;
   width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
 
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -156,7 +191,7 @@ header .spacer{flex:1;}
 
 <div class="wrap">
 
-  <!-- STEP 1 -->
+  <!-- ── STEP 1 ── -->
   <div class="panel" id="panel-load">
     <div class="panel-header">
       <div class="section-num">1</div>
@@ -181,7 +216,7 @@ header .spacer{flex:1;}
     </div>
   </div>
 
-  <!-- STEP 2 -->
+  <!-- ── STEP 2 ── -->
   <div class="panel" id="panel-edit" style="display:none;">
     <div class="panel-header">
       <div class="section-num">2</div>
@@ -189,8 +224,26 @@ header .spacer{flex:1;}
       <span class="badge active" id="count-badge">0局</span>
     </div>
     <div class="panel-body">
+
+      <!-- カテゴリー管理 -->
+      <div class="panel" style="background:var(--surface2);border-color:var(--border2);margin-bottom:20px;">
+        <div class="panel-header" style="padding:12px 16px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);flex:1;">カテゴリー管理</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);">ドラッグで並び替え / 名前変更 / 削除</span>
+        </div>
+        <div style="padding:14px 16px;">
+          <div class="cat-mgmt" id="cat-mgmt-list"></div>
+          <div class="cat-add-row">
+            <input class="cat-add-input" id="cat-add-input" type="text" placeholder="新しいカテゴリー名を入力..." />
+            <button class="btn small primary" onclick="addCategory()">追加 +</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 局リスト -->
       <div id="cat-container"></div>
 
+      <!-- 局追加フォーム -->
       <div style="margin-top:20px;">
         <div class="add-section">
           <h3>+ 新しいラジオ局を追加</h3>
@@ -205,12 +258,7 @@ header .spacer{flex:1;}
             </div>
             <div class="field">
               <label>カテゴリー (category)*</label>
-              <select id="add-cat">
-                <option>News</option><option>Music</option><option>Jazz</option>
-                <option>Ambient</option><option>Lo-fi</option><option>City Pop</option>
-                <option>Classic Rock</option><option>Pop</option><option>Eclectic</option>
-                <option>Hottest Hits</option><option>Talk</option><option>Sports</option><option>Other</option>
-              </select>
+              <select id="add-cat"></select>
             </div>
             <div class="field full" id="add-url-field">
               <label>ストリームURL (url)*</label>
@@ -256,7 +304,7 @@ header .spacer{flex:1;}
     </div>
   </div>
 
-  <!-- STEP 3 -->
+  <!-- ── STEP 3 ── -->
   <div class="panel" id="panel-output" style="display:none;">
     <div class="panel-header">
       <div class="section-num">3</div>
@@ -278,11 +326,13 @@ header .spacer{flex:1;}
 <script>
 // ─────────────────────────────────────────
 //  STATE
-//  groups: [ { cat: string, stations: [...] }, ... ]
+//  groups:     [ { cat: string, stations: [...] }, ... ]
 //  editingKey: { gi, si } | null
+//  renamingCat: gi | null
 // ─────────────────────────────────────────
 let groups = [];
 let editingKey = null;
+let renamingCat = null;
 
 // ── STEP 1 ──────────────────────────────
 function loadStations() {
@@ -300,6 +350,7 @@ function loadStations() {
   }
   groups = buildGroups(flat);
   editingKey = null;
+  renamingCat = null;
   renderAll();
   setStep(2);
   document.getElementById('panel-load').style.display = 'none';
@@ -308,8 +359,7 @@ function loadStations() {
 }
 
 function buildGroups(flat) {
-  const map = {};
-  const order = [];
+  const map = {}, order = [];
   flat.forEach(s => {
     const c = s.category || 'Other';
     if (!map[c]) { map[c] = []; order.push(c); }
@@ -319,9 +369,7 @@ function buildGroups(flat) {
 }
 
 function flattenGroups() {
-  const out = [];
-  groups.forEach(g => g.stations.forEach(s => out.push(s)));
-  return out;
+  return groups.flatMap(g => g.stations);
 }
 
 function backToLoad() {
@@ -333,13 +381,162 @@ function backToLoad() {
 
 // ── RENDER ───────────────────────────────
 function renderAll() {
+  renderCatMgmt();
+  renderStationList();
+  renderAddCatSelect();
+}
+
+// ── CATEGORY MANAGEMENT ──────────────────
+function renderCatMgmt() {
+  const list = document.getElementById('cat-mgmt-list');
+  list.innerHTML = '';
+  if (!groups.length) {
+    list.innerHTML = '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.72rem;color:var(--muted);padding:8px 0;">カテゴリーがありません</div>';
+    return;
+  }
+  groups.forEach((g, gi) => {
+    const item = document.createElement('div');
+    item.className = 'cat-mgmt-item' + (renamingCat === gi ? ' editing-cat' : '');
+    item.dataset.gi = gi;
+    item.draggable = true;
+
+    if (renamingCat === gi) {
+      item.innerHTML = `
+        <span class="cat-mgmt-drag">⠿</span>
+        <div class="cat-rename-form">
+          <input class="cat-rename-input" id="rename-input-${gi}" type="text" value="${escAttr(g.cat)}" />
+          <button class="btn small primary" onclick="saveCatRename(${gi})">保存</button>
+          <button class="btn small ghost" onclick="cancelCatRename()">キャンセル</button>
+        </div>
+      `;
+      setTimeout(() => {
+        const inp = document.getElementById('rename-input-' + gi);
+        if (inp) { inp.focus(); inp.select(); }
+      }, 0);
+    } else {
+      item.innerHTML = `
+        <span class="cat-mgmt-drag" title="ドラッグで順番変更">⠿</span>
+        <span class="cat-mgmt-name">${escHtml(g.cat)}</span>
+        <span class="cat-mgmt-count">${g.stations.length}局</span>
+        <div class="cat-mgmt-actions">
+          <button class="btn small ghost" onclick="startCatRename(${gi})">名前変更</button>
+          <button class="btn small danger" onclick="deleteCategory(${gi})">削除</button>
+        </div>
+      `;
+    }
+    list.appendChild(item);
+  });
+  setupCatMgmtDrag();
+}
+
+function startCatRename(gi) {
+  renamingCat = gi;
+  renderCatMgmt();
+}
+
+function cancelCatRename() {
+  renamingCat = null;
+  renderCatMgmt();
+}
+
+function saveCatRename(gi) {
+  const inp = document.getElementById('rename-input-' + gi);
+  const newName = inp.value.trim();
+  if (!newName) { alert('カテゴリー名を入力してください'); return; }
+  if (newName !== groups[gi].cat && groups.some((g, i) => i !== gi && g.cat === newName)) {
+    if (!confirm(`「${newName}」は既に存在します。統合しますか？`)) return;
+    // 既存カテゴリーに統合
+    const targetGi = groups.findIndex((g, i) => i !== gi && g.cat === newName);
+    groups[targetGi].stations.push(...groups[gi].stations);
+    groups.splice(gi, 1);
+  } else {
+    // 全局のcategoryフィールドも更新
+    const oldName = groups[gi].cat;
+    groups[gi].cat = newName;
+    groups[gi].stations.forEach(s => s.category = newName);
+  }
+  renamingCat = null;
+  editingKey = null;
+  renderAll();
+}
+
+function deleteCategory(gi) {
+  const count = groups[gi].stations.length;
+  const msg = count > 0
+    ? `「${groups[gi].cat}」には${count}局あります。\n局ごとすべて削除されます。本当に削除しますか？`
+    : `「${groups[gi].cat}」を削除しますか？`;
+  if (!confirm(msg)) return;
+  groups.splice(gi, 1);
+  if (editingKey && editingKey.gi === gi) editingKey = null;
+  renamingCat = null;
+  renderAll();
+}
+
+function addCategory() {
+  const inp = document.getElementById('cat-add-input');
+  const name = inp.value.trim();
+  if (!name) { alert('カテゴリー名を入力してください'); return; }
+  if (groups.some(g => g.cat === name)) {
+    alert(`「${name}」は既に存在します`); return;
+  }
+  groups.push({ cat: name, stations: [] });
+  inp.value = '';
+  renderAll();
+}
+
+// カテゴリー管理パネルでのドラッグ並び替え
+function setupCatMgmtDrag() {
+  const list = document.getElementById('cat-mgmt-list');
+  let dragSrc = null;
+
+  list.querySelectorAll('.cat-mgmt-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragSrc = item;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => item.classList.add('dragging'), 0);
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      list.querySelectorAll('.cat-mgmt-item').forEach(el => el.classList.remove('drag-over'));
+      dragSrc = null;
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === item) return;
+      list.querySelectorAll('.cat-mgmt-item').forEach(el => el.classList.remove('drag-over'));
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === item) return;
+      const fromGi = parseInt(dragSrc.dataset.gi);
+      const toGi = parseInt(item.dataset.gi);
+      const moved = groups.splice(fromGi, 1)[0];
+      groups.splice(toGi, 0, moved);
+      renamingCat = null;
+      editingKey = null;
+      renderAll();
+    });
+  });
+}
+
+// カテゴリー選択のselect要素を動的に生成
+function renderAddCatSelect() {
+  const sel = document.getElementById('add-cat');
+  const prev = sel.value;
+  sel.innerHTML = groups.map(g => `<option${g.cat === prev ? ' selected' : ''}>${escHtml(g.cat)}</option>`).join('');
+  if (!sel.value && groups.length) sel.selectedIndex = 0;
+}
+
+// ── STATION LIST ─────────────────────────
+function renderStationList() {
   const container = document.getElementById('cat-container');
   container.innerHTML = '';
   const total = groups.reduce((n, g) => n + g.stations.length, 0);
   document.getElementById('count-badge').textContent = total + '局';
 
   if (!groups.length) {
-    container.innerHTML = '<div class="empty-list">局がありません。下のフォームから追加してください。</div>';
+    container.innerHTML = '<div class="empty-list">カテゴリーがありません。上のパネルから追加してください。</div>';
     return;
   }
 
@@ -352,7 +549,6 @@ function makeCatBlock(g, gi) {
   block.className = 'cat-block';
   block.dataset.gi = gi;
 
-  // カテゴリーヘッダー（ドラッグ対象）
   const header = document.createElement('div');
   header.className = 'cat-header';
   header.draggable = true;
@@ -363,13 +559,20 @@ function makeCatBlock(g, gi) {
   `;
   block.appendChild(header);
 
-  // 局リスト
   const inner = document.createElement('div');
   inner.className = 'station-list-inner';
   inner.dataset.gi = gi;
-  g.stations.forEach((s, si) => inner.appendChild(makeStationItem(s, gi, si)));
-  block.appendChild(inner);
 
+  if (g.stations.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'padding:10px 14px;font-family:\'IBM Plex Mono\',monospace;font-size:0.72rem;color:var(--muted);';
+    empty.textContent = '局がありません';
+    inner.appendChild(empty);
+  } else {
+    g.stations.forEach((s, si) => inner.appendChild(makeStationItem(s, gi, si)));
+  }
+
+  block.appendChild(inner);
   setupStationDrag(inner, gi);
   return block;
 }
@@ -398,7 +601,6 @@ function makeStationItem(s, gi, si) {
       <button class="btn small danger" onclick="deleteStation(${gi},${si})">削除</button>
     </div>
   `;
-
   if (isEditing) item.appendChild(buildEditForm(gi, si, s));
   return item;
 }
@@ -406,12 +608,11 @@ function makeStationItem(s, gi, si) {
 // ── STATION DRAG（同カテゴリー内のみ）────
 function setupStationDrag(inner, gi) {
   let dragSrc = null;
-
   inner.addEventListener('dragstart', e => {
     const item = e.target.closest('.station-item');
     if (!item) return;
     dragSrc = item;
-    e.stopPropagation(); // カテゴリードラッグへ伝播させない
+    e.stopPropagation();
     setTimeout(() => item.classList.add('dragging'), 0);
   });
   inner.addEventListener('dragend', e => {
@@ -442,14 +643,12 @@ function setupStationDrag(inner, gi) {
   });
 }
 
-// ── CATEGORY DRAG ────────────────────────
+// ── CATEGORY DRAG（局リスト側）───────────
 function setupCatDrag() {
   const container = document.getElementById('cat-container');
   let dragSrcGi = null;
-
   container.querySelectorAll('.cat-block').forEach(block => {
     const header = block.querySelector('.cat-header');
-
     header.addEventListener('dragstart', e => {
       dragSrcGi = parseInt(block.dataset.gi);
       e.dataTransfer.effectAllowed = 'move';
@@ -461,7 +660,7 @@ function setupCatDrag() {
       dragSrcGi = null;
     });
     block.addEventListener('dragover', e => {
-      if (dragSrcGi === null) return; // 局ドラッグ中は無視
+      if (dragSrcGi === null) return;
       e.preventDefault();
       container.querySelectorAll('.cat-block').forEach(b => b.classList.remove('drag-over-cat'));
       block.classList.add('drag-over-cat');
@@ -564,7 +763,6 @@ function saveEdit(gi, si, k) {
 
   const oldCat = groups[gi].cat;
   if (newCat !== oldCat) {
-    // カテゴリー変更: 元グループから削除→新グループへ
     groups[gi].stations.splice(si, 1);
     if (groups[gi].stations.length === 0) groups.splice(gi, 1);
     const targetGi = groups.findIndex(g => g.cat === newCat);
@@ -573,7 +771,6 @@ function saveEdit(gi, si, k) {
   } else {
     groups[gi].stations[si] = s;
   }
-
   editingKey = null;
   renderAll();
 }
@@ -583,7 +780,6 @@ function cancelEdit() { editingKey = null; renderAll(); }
 function deleteStation(gi, si) {
   if (!confirm(`「${groups[gi].stations[si].name}」を削除しますか？`)) return;
   groups[gi].stations.splice(si, 1);
-  if (groups[gi].stations.length === 0) groups.splice(gi, 1);
   editingKey = null;
   renderAll();
 }
@@ -607,6 +803,7 @@ function addStation() {
   if (!name) { alert('局名は必須です'); return; }
   if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
   if (isExt && !web) { alert('公式サイトURLは必須です'); return; }
+  if (!cat) { alert('カテゴリーを選択してください'); return; }
 
   const s = { name, category: cat };
   if (isExt) s.website = web; else s.url = url;
@@ -627,7 +824,6 @@ function addStation() {
 
 function clearAddForm() {
   ['add-name','add-url','add-web','add-desc'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('add-cat').selectedIndex = 0;
   document.getElementById('add-tz').selectedIndex = 0;
   document.getElementById('add-is-ext').checked = false;
   document.getElementById('add-url-field').style.display = '';
@@ -668,13 +864,20 @@ function setStep(n) {
 }
 
 function buildCatSelect(id, val) {
-  const cats = ['News','Music','Jazz','Ambient','Lo-fi','City Pop','Classic Rock','Pop','Eclectic','Hottest Hits','Talk','Sports','Other'];
-  return `<select id="${id}">${cats.map(c => `<option${c===val?' selected':''}>${c}</option>`).join('')}</select>`;
+  return `<select id="${id}">${groups.map(g =>
+    `<option${g.cat === val ? ' selected' : ''}>${escHtml(g.cat)}</option>`
+  ).join('')}</select>`;
 }
 
 function buildTzSelect(id, val) {
-  const tzs = [['','— なし —'],['Asia/Tokyo','Asia/Tokyo'],['Asia/Manila','Asia/Manila'],['Asia/Seoul','Asia/Seoul'],['Asia/Shanghai','Asia/Shanghai'],['Asia/Singapore','Asia/Singapore'],['Australia/Sydney','Australia/Sydney'],['Europe/London','Europe/London'],['Europe/Paris','Europe/Paris'],['America/New_York','America/New_York'],['America/Los_Angeles','America/Los_Angeles'],['UTC','UTC']];
-  return `<select id="${id}">${tzs.map(([v,l]) => `<option value="${v}"${v===val?' selected':''}>${l}</option>`).join('')}</select>`;
+  const tzs = [['','— なし —'],['Asia/Tokyo','Asia/Tokyo'],['Asia/Manila','Asia/Manila'],
+    ['Asia/Seoul','Asia/Seoul'],['Asia/Shanghai','Asia/Shanghai'],['Asia/Singapore','Asia/Singapore'],
+    ['Australia/Sydney','Australia/Sydney'],['Europe/London','Europe/London'],
+    ['Europe/Paris','Europe/Paris'],['America/New_York','America/New_York'],
+    ['America/Los_Angeles','America/Los_Angeles'],['UTC','UTC']];
+  return `<select id="${id}">${tzs.map(([v,l]) =>
+    `<option value="${v}"${v === val ? ' selected' : ''}>${l}</option>`
+  ).join('')}</select>`;
 }
 
 function escHtml(s) {
