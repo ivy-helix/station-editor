@@ -12,7 +12,7 @@
   --border:#2a2a32;--border2:#3a3a45;
   --amber:#e8a838;--amber-dim:#9a6e1f;--amber-bg:#2a1f08;
   --text:#e8e4da;--muted:#6b6870;
-  --danger:#e84040;--danger-bg:#2a0808;--danger-dim:#7a2020;
+  --danger:#e84040;--danger-bg:#2a0808;
   --blue:#4a9eff;--green:#4ade80;--green-bg:#0a2a1a;
   --radius:10px;
 }
@@ -38,7 +38,6 @@ header .spacer{flex:1;}
 .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .panel-header h2{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--text);flex:1;}
 .panel-body{padding:20px;}
-
 .badge{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;
   padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);}
 .badge.active{background:var(--amber-bg);border-color:var(--amber-dim);color:var(--amber);}
@@ -58,7 +57,7 @@ header .spacer{flex:1;}
 .btn.ghost:hover{color:var(--text);background:var(--surface2);border-color:var(--border);}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 
-/* ── STEP 1: PASTE ── */
+/* ── STEP 1 ── */
 .paste-area{width:100%;min-height:140px;background:var(--surface2);border:1px solid var(--border2);
   border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
   color:var(--text);resize:vertical;outline:none;line-height:1.6;}
@@ -119,9 +118,13 @@ header .spacer{flex:1;}
 .station-cat{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;
   text-transform:uppercase;color:var(--muted);}
 .station-url{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
 .tag-ext{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;padding:2px 7px;
   border-radius:10px;background:var(--blue);color:#0d0d0f;letter-spacing:0.06em;}
+.tag-vol{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;padding:2px 7px;
+  border-radius:10px;background:var(--surface2);border:1px solid var(--border2);
+  color:var(--muted);display:flex;align-items:center;gap:4px;}
+.tag-vol.custom{border-color:var(--amber-dim);color:var(--amber);}
 .station-actions{display:flex;gap:6px;flex-shrink:0;}
 
 /* ── EDIT FORM ── */
@@ -138,6 +141,20 @@ header .spacer{flex:1;}
 .toggle-ext{display:flex;align-items:center;gap:8px;}
 .toggle-ext input[type=checkbox]{width:auto;accent-color:var(--amber);}
 .toggle-ext label{font-size:0.82rem;color:var(--text);cursor:pointer;}
+
+/* ── VOLUME SLIDER ── */
+.vol-field{display:flex;flex-direction:column;gap:6px;}
+.vol-row{display:flex;align-items:center;gap:10px;}
+.vol-slider{-webkit-appearance:none;flex:1;height:4px;border-radius:2px;
+  background:var(--border2);outline:none;cursor:pointer;accent-color:var(--amber);}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--amber);cursor:pointer;transition:transform 0.1s;}
+.vol-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
+.vol-slider::-moz-range-thumb{width:16px;height:16px;border:none;border-radius:50%;
+  background:var(--amber);cursor:pointer;}
+.vol-num{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text);
+  min-width:32px;text-align:right;}
+.vol-hint{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);}
 
 /* ── ADD FORM ── */
 .add-section{background:var(--surface2);border:1px dashed var(--border2);
@@ -161,7 +178,6 @@ header .spacer{flex:1;}
 .section-num{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--amber);
   background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:50%;
   width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
 
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -206,7 +222,8 @@ header .spacer{flex:1;}
     "url": "https://...",
     "category": "News",
     "desc": "BBC英語国際放送",
-    "timezone": "Europe/London"
+    "timezone": "Europe/London",
+    "volume": 0.8
   }
 ]'></textarea>
       <p class="paste-hint">※ 初回など何もない場合は空欄のまま「読み込む」を押すと空リストで始められます。</p>
@@ -289,6 +306,17 @@ header .spacer{flex:1;}
                 <option value="UTC">UTC</option>
               </select>
             </div>
+            <div class="field full">
+              <div class="vol-field">
+                <label>音量 (volume) — デフォルト 0.8</label>
+                <div class="vol-row">
+                  <input class="vol-slider" type="range" id="add-vol" min="0" max="1" step="0.05" value="0.8"
+                    oninput="document.getElementById('add-vol-num').textContent=parseFloat(this.value).toFixed(2)" />
+                  <span class="vol-num" id="add-vol-num">0.80</span>
+                </div>
+                <span class="vol-hint">0.00（無音）〜 1.00（最大）</span>
+              </div>
+            </div>
           </div>
           <div class="btn-row">
             <button class="btn primary" onclick="addStation()">追加する +</button>
@@ -326,13 +354,12 @@ header .spacer{flex:1;}
 <script>
 // ─────────────────────────────────────────
 //  STATE
-//  groups:     [ { cat: string, stations: [...] }, ... ]
-//  editingKey: { gi, si } | null
-//  renamingCat: gi | null
 // ─────────────────────────────────────────
 let groups = [];
 let editingKey = null;
 let renamingCat = null;
+
+const DEFAULT_VOLUME = 0.8;
 
 // ── STEP 1 ──────────────────────────────
 function loadStations() {
@@ -429,15 +456,8 @@ function renderCatMgmt() {
   setupCatMgmtDrag();
 }
 
-function startCatRename(gi) {
-  renamingCat = gi;
-  renderCatMgmt();
-}
-
-function cancelCatRename() {
-  renamingCat = null;
-  renderCatMgmt();
-}
+function startCatRename(gi) { renamingCat = gi; renderCatMgmt(); }
+function cancelCatRename() { renamingCat = null; renderCatMgmt(); }
 
 function saveCatRename(gi) {
   const inp = document.getElementById('rename-input-' + gi);
@@ -445,13 +465,10 @@ function saveCatRename(gi) {
   if (!newName) { alert('カテゴリー名を入力してください'); return; }
   if (newName !== groups[gi].cat && groups.some((g, i) => i !== gi && g.cat === newName)) {
     if (!confirm(`「${newName}」は既に存在します。統合しますか？`)) return;
-    // 既存カテゴリーに統合
     const targetGi = groups.findIndex((g, i) => i !== gi && g.cat === newName);
     groups[targetGi].stations.push(...groups[gi].stations);
     groups.splice(gi, 1);
   } else {
-    // 全局のcategoryフィールドも更新
-    const oldName = groups[gi].cat;
     groups[gi].cat = newName;
     groups[gi].stations.forEach(s => s.category = newName);
   }
@@ -476,19 +493,15 @@ function addCategory() {
   const inp = document.getElementById('cat-add-input');
   const name = inp.value.trim();
   if (!name) { alert('カテゴリー名を入力してください'); return; }
-  if (groups.some(g => g.cat === name)) {
-    alert(`「${name}」は既に存在します`); return;
-  }
+  if (groups.some(g => g.cat === name)) { alert(`「${name}」は既に存在します`); return; }
   groups.push({ cat: name, stations: [] });
   inp.value = '';
   renderAll();
 }
 
-// カテゴリー管理パネルでのドラッグ並び替え
 function setupCatMgmtDrag() {
   const list = document.getElementById('cat-mgmt-list');
   let dragSrc = null;
-
   list.querySelectorAll('.cat-mgmt-item').forEach(item => {
     item.addEventListener('dragstart', e => {
       dragSrc = item;
@@ -520,7 +533,6 @@ function setupCatMgmtDrag() {
   });
 }
 
-// カテゴリー選択のselect要素を動的に生成
 function renderAddCatSelect() {
   const sel = document.getElementById('add-cat');
   const prev = sel.value;
@@ -539,7 +551,6 @@ function renderStationList() {
     container.innerHTML = '<div class="empty-list">カテゴリーがありません。上のパネルから追加してください。</div>';
     return;
   }
-
   groups.forEach((g, gi) => container.appendChild(makeCatBlock(g, gi)));
   setupCatDrag();
 }
@@ -580,6 +591,9 @@ function makeCatBlock(g, gi) {
 function makeStationItem(s, gi, si) {
   const isExt = !!s.website;
   const isEditing = editingKey && editingKey.gi === gi && editingKey.si === si;
+  const vol = (s.volume !== undefined) ? s.volume : DEFAULT_VOLUME;
+  const isCustomVol = Math.abs(vol - DEFAULT_VOLUME) > 0.001;
+
   const item = document.createElement('div');
   item.className = 'station-item' + (isEditing ? ' editing' : '');
   item.dataset.gi = gi;
@@ -594,6 +608,7 @@ function makeStationItem(s, gi, si) {
         <span class="station-cat">${escHtml(s.category)}</span>
         ${isExt ? '<span class="tag-ext">外部</span>' : ''}
         <span class="station-url">${escHtml(s.url || s.website || '')}</span>
+        <span class="tag-vol ${isCustomVol ? 'custom' : ''}">vol ${vol.toFixed(2)}</span>
       </div>
     </div>
     <div class="station-actions">
@@ -605,7 +620,7 @@ function makeStationItem(s, gi, si) {
   return item;
 }
 
-// ── STATION DRAG（同カテゴリー内のみ）────
+// ── STATION DRAG ─────────────────────────
 function setupStationDrag(inner, gi) {
   let dragSrc = null;
   inner.addEventListener('dragstart', e => {
@@ -694,6 +709,8 @@ function toggleEdit(gi, si) {
 function buildEditForm(gi, si, s) {
   const isExt = !!s.website;
   const k = `${gi}_${si}`;
+  const vol = (s.volume !== undefined) ? s.volume : DEFAULT_VOLUME;
+
   const wrap = document.createElement('div');
   wrap.className = 'edit-form full';
   wrap.innerHTML = `
@@ -728,6 +745,17 @@ function buildEditForm(gi, si, s) {
       ${buildTzSelect('ei-tz-' + k, s.timezone || '')}
     </div>
     <div class="field full">
+      <div class="vol-field">
+        <label>音量 (volume)</label>
+        <div class="vol-row">
+          <input class="vol-slider" type="range" id="ei-vol-${k}" min="0" max="1" step="0.05" value="${vol}"
+            oninput="document.getElementById('ei-vol-num-${k}').textContent=parseFloat(this.value).toFixed(2)" />
+          <span class="vol-num" id="ei-vol-num-${k}">${vol.toFixed(2)}</span>
+        </div>
+        <span class="vol-hint">0.00（無音）〜 1.00（最大）　デフォルト: 0.80</span>
+      </div>
+    </div>
+    <div class="field full">
       <div class="btn-row" style="margin-top:4px;">
         <button class="btn primary small" onclick="saveEdit(${gi},${si},'${k}')">保存</button>
         <button class="btn ghost small" onclick="cancelEdit()">キャンセル</button>
@@ -751,6 +779,7 @@ function saveEdit(gi, si, k) {
   const web = document.getElementById('ei-web-' + k).value.trim();
   const desc = document.getElementById('ei-desc-' + k).value.trim();
   const tz = document.getElementById('ei-tz-' + k).value;
+  const vol = parseFloat(document.getElementById('ei-vol-' + k).value);
 
   if (!name) { alert('局名は必須です'); return; }
   if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
@@ -760,6 +789,7 @@ function saveEdit(gi, si, k) {
   if (isExt) s.website = web; else s.url = url;
   if (desc) s.desc = desc;
   if (tz) s.timezone = tz;
+  s.volume = Math.round(vol * 100) / 100;
 
   const oldCat = groups[gi].cat;
   if (newCat !== oldCat) {
@@ -799,6 +829,7 @@ function addStation() {
   const web = document.getElementById('add-web').value.trim();
   const desc = document.getElementById('add-desc').value.trim();
   const tz = document.getElementById('add-tz').value;
+  const vol = parseFloat(document.getElementById('add-vol').value);
 
   if (!name) { alert('局名は必須です'); return; }
   if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
@@ -809,6 +840,7 @@ function addStation() {
   if (isExt) s.website = web; else s.url = url;
   if (desc) s.desc = desc;
   if (tz) s.timezone = tz;
+  s.volume = Math.round(vol * 100) / 100;
 
   const gi = groups.findIndex(g => g.cat === cat);
   if (gi >= 0) groups[gi].stations.push(s);
@@ -828,6 +860,9 @@ function clearAddForm() {
   document.getElementById('add-is-ext').checked = false;
   document.getElementById('add-url-field').style.display = '';
   document.getElementById('add-web-field').style.display = 'none';
+  const volSlider = document.getElementById('add-vol');
+  volSlider.value = DEFAULT_VOLUME;
+  document.getElementById('add-vol-num').textContent = DEFAULT_VOLUME.toFixed(2);
 }
 
 // ── STEP 3 ───────────────────────────────
