@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MyRadio — Station Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0d0f;--surface:#16161a;--surface2:#1e1e24;
+  --border:#2a2a32;--border2:#3a3a45;
+  --amber:#e8a838;--amber-dim:#9a6e1f;--amber-bg:#2a1f08;
+  --text:#e8e4da;--muted:#6b6870;--danger:#e84040;--danger-bg:#2a0808;
+  --blue:#4a9eff;--green:#4ade80;--green-bg:#0a2a1a;
+  --radius:10px;--player-h:80px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;}
+
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);
+  padding:18px 32px;display:flex;align-items:center;gap:16px;}
+header h1{font-family:'DM Serif Display',serif;font-size:1.6rem;letter-spacing:-0.02em;color:var(--amber);}
+.badge{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;
+  padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);}
+.badge.active{background:var(--amber-bg);border-color:var(--amber-dim);color:var(--amber);}
+header .spacer{flex:1;}
+.step-indicator{display:flex;align-items:center;gap:6px;}
+.step{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;
+  padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.2s;}
+.step.done{color:var(--green);border-color:var(--green);background:var(--green-bg);}
+.step.current{color:var(--amber);border-color:var(--amber);background:var(--amber-bg);}
+
+/* LAYOUT */
+.wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:32px 24px 120px;}
+
+/* PANELS */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;}
+.panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.panel-header h2{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--text);flex:1;}
+.panel-body{padding:20px;}
+
+/* STEP 1 — PASTE */
+.paste-area{width:100%;min-height:140px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
+  color:var(--text);resize:vertical;outline:none;line-height:1.6;}
+.paste-area:focus{border-color:var(--amber-dim);}
+.paste-hint{font-size:0.78rem;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+/* BUTTONS */
+.btn{font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:400;
+  padding:9px 20px;border-radius:8px;border:1px solid var(--border2);
+  background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{background:var(--surface2);border-color:var(--border2);}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#0d0d0f;font-weight:500;}
+.btn.primary:hover{opacity:0.85;}
+.btn.danger{border-color:var(--danger);color:var(--danger);}
+.btn.danger:hover{background:var(--danger-bg);}
+.btn.small{padding:5px 12px;font-size:0.78rem;}
+.btn.ghost{border-color:transparent;color:var(--muted);}
+.btn.ghost:hover{color:var(--text);background:var(--surface2);border-color:var(--border);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+/* STEP 2 — STATION LIST */
+.station-list{display:flex;flex-direction:column;gap:8px;}
+.station-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;display:flex;align-items:center;gap:12px;transition:border-color 0.15s;}
+.station-item:hover{border-color:var(--border2);}
+.station-item.editing{border-color:var(--amber-dim);background:#1c1a14;}
+.station-info{flex:1;min-width:0;}
+.station-name{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.station-meta{display:flex;gap:10px;margin-top:3px;align-items:center;flex-wrap:wrap;}
+.station-cat{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);}
+.station-url{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+.tag-ext{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;padding:2px 7px;
+  border-radius:10px;background:var(--blue);color:#0d0d0f;letter-spacing:0.06em;}
+.station-actions{display:flex;gap:6px;flex-shrink:0;}
+
+/* INLINE EDIT FORM */
+.edit-form{margin-top:12px;border-top:1px solid var(--border);padding-top:14px;
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.edit-form .full{grid-column:1/-1;}
+.field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.field input,.field select{width:100%;background:var(--surface);border:1px solid var(--border2);
+  border-radius:6px;padding:8px 10px;font-size:0.85rem;color:var(--text);
+  font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s;}
+.field input:focus,.field select:focus{border-color:var(--amber-dim);}
+.field select option{background:var(--surface);}
+.toggle-ext{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+.toggle-ext input[type=checkbox]{width:auto;accent-color:var(--amber);}
+.toggle-ext label{font-size:0.82rem;color:var(--text);cursor:pointer;}
+
+/* ADD FORM */
+.add-section{background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius);padding:20px;}
+.add-section h3{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--amber);margin-bottom:14px;}
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.add-grid .full{grid-column:1/-1;}
+
+/* STEP 3 — OUTPUT */
+.output-box{width:100%;min-height:200px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
+  color:var(--green);resize:vertical;outline:none;line-height:1.7;cursor:text;}
+.copy-confirm{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--green);
+  display:none;margin-left:8px;}
+
+/* EMPTY */
+.empty-list{text-align:center;padding:40px;font-family:'IBM Plex Mono',monospace;
+  font-size:0.78rem;color:var(--muted);letter-spacing:0.06em;}
+
+/* CATEGORY DIVIDER */
+.cat-divider{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--muted);padding:4px 0 2px;border-bottom:1px solid var(--border);
+  margin-bottom:4px;margin-top:8px;}
+.cat-divider:first-child{margin-top:0;}
+
+/* DRAG HANDLE */
+.drag-handle{color:var(--border2);cursor:grab;font-size:1.1rem;flex-shrink:0;user-select:none;padding:0 4px;}
+.drag-handle:active{cursor:grabbing;}
+
+/* SECTION NUMBER */
+.section-num{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--amber);
+  background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:50%;
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* NOTICE */
+.notice{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--muted);
+  background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:10px 14px;line-height:1.7;margin-top:12px;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+@media(max-width:600px){
+  .wrap{padding:20px 16px 120px;}
+  .edit-form,.add-grid{grid-template-columns:1fr;}
+  .edit-form .full,.add-grid .full{grid-column:1;}
+  header{padding:14px 16px;}
+  .step-indicator{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Station Editor</h1>
+  <div class="spacer"></div>
+  <div class="step-indicator">
+    <span class="step current" id="s1">1. 読み込み</span>
+    <span class="step" id="s2">2. 編集</span>
+    <span class="step" id="s3">3. 出力</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 1: PASTE -->
+  <div class="panel" id="panel-load">
+    <div class="panel-header">
+      <div class="section-num">1</div>
+      <h2>stations.json を貼り付ける</h2>
+    </div>
+    <div class="panel-body">
+      <textarea class="paste-area" id="paste-input" placeholder='StackBlitz から stations.json の中身をここに貼り付けてください。
+例:
+[
+  {
+    "name": "BBC World Service",
+    "url": "https://...",
+    "category": "News",
+    "desc": "BBC英語国際放送",
+    "timezone": "Europe/London"
+  }
+]'></textarea>
+      <p class="paste-hint">※ 初回など何もない場合は空欄のまま「読み込む」を押すと空リストで始められます。</p>
+      <div class="btn-row">
+        <button class="btn primary" onclick="loadStations()">読み込む →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: EDIT -->
+  <div class="panel" id="panel-edit" style="display:none;">
+    <div class="panel-header">
+      <div class="section-num">2</div>
+      <h2>ラジオ局を編集・追加</h2>
+      <span class="badge active" id="count-badge">0局</span>
+    </div>
+    <div class="panel-body">
+      <div class="station-list" id="station-list"></div>
+
+      <!-- ADD NEW -->
+      <div style="margin-top:20px;">
+        <div class="add-section" id="add-section">
+          <h3>+ 新しいラジオ局を追加</h3>
+          <div class="toggle-ext" style="margin-bottom:12px;">
+            <input type="checkbox" id="add-is-ext" onchange="toggleAddExt()" />
+            <label for="add-is-ext">外部サイト表示モード（直接再生不可の局）</label>
+          </div>
+          <div class="add-grid">
+            <div class="field">
+              <label>局名 (name)*</label>
+              <input id="add-name" type="text" placeholder="FM世田谷" />
+            </div>
+            <div class="field">
+              <label>カテゴリー (category)*</label>
+              <select id="add-cat">
+                <option>News</option><option>Music</option><option>Jazz</option>
+                <option>Ambient</option><option>Lo-fi</option><option>City Pop</option>
+                <option>Classic Rock</option><option>Pop</option><option>Eclectic</option>
+                <option>Hottest Hits</option><option>Talk</option><option>Sports</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field full" id="add-url-field">
+              <label>ストリームURL (url)*</label>
+              <input id="add-url" type="text" placeholder="https://example.out.airtime.pro/stream_a" />
+            </div>
+            <div class="field full" id="add-web-field" style="display:none;">
+              <label>公式サイトURL (website)*</label>
+              <input id="add-web" type="text" placeholder="https://www.nhk.or.jp/radio/" />
+            </div>
+            <div class="field full">
+              <label>説明 (desc) — 省略可</label>
+              <input id="add-desc" type="text" placeholder="地域密着型ラジオ局" />
+            </div>
+            <div class="field full">
+              <label>タイムゾーン (timezone) — 省略可・Newsカテゴリー推奨</label>
+              <select id="add-tz">
+                <option value="">— なし —</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+                <option value="Asia/Manila">Asia/Manila</option>
+                <option value="Asia/Seoul">Asia/Seoul</option>
+                <option value="Asia/Shanghai">Asia/Shanghai</option>
+                <option value="Asia/Singapore">Asia/Singapore</option>
+                <option value="Australia/Sydney">Australia/Sydney</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Europe/Paris">Europe/Paris</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" onclick="addStation()">追加する +</button>
+            <button class="btn ghost" onclick="clearAddForm()">クリア</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:24px;">
+        <button class="btn primary" onclick="showOutput()">出力する →</button>
+        <button class="btn ghost" onclick="backToLoad()">← 最初に戻る</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: OUTPUT -->
+  <div class="panel" id="panel-output" style="display:none;">
+    <div class="panel-header">
+      <div class="section-num">3</div>
+      <h2>出力 — StackBlitz に貼り付け</h2>
+    </div>
+    <div class="panel-body">
+      <textarea class="output-box" id="output-text" readonly></textarea>
+      <div class="notice">
+        ↑ このJSON全体をコピーして、StackBlitz の <strong>stations.json</strong> にそのまま上書き貼り付けしてください。
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="copyOutput()">全コピー ↗</button>
+        <span class="copy-confirm" id="copy-confirm">コピーしました!</span>
+        <button class="btn ghost" onclick="backToEdit()">← 編集に戻る</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let stations = [];
+let editingIdx = null;
+
+// ── STEP 1 ──
+function loadStations() {
+  const raw = document.getElementById('paste-input').value.trim();
+  if (!raw) {
+    stations = [];
+  } else {
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error('配列ではありません');
+      stations = parsed;
+    } catch(e) {
+      alert('JSONの形式が正しくありません。\n' + e.message);
+      return;
+    }
+  }
+  editingIdx = null;
+  renderList();
+  setStep(2);
+  document.getElementById('panel-load').style.display = 'none';
+  document.getElementById('panel-edit').style.display = '';
+  document.getElementById('panel-output').style.display = 'none';
+}
+
+function backToLoad() {
+  setStep(1);
+  document.getElementById('panel-load').style.display = '';
+  document.getElementById('panel-edit').style.display = 'none';
+  document.getElementById('panel-output').style.display = 'none';
+}
+
+// ── STEP 2 ──
+function renderList() {
+  const list = document.getElementById('station-list');
+  list.innerHTML = '';
+  document.getElementById('count-badge').textContent = stations.length + '局';
+
+  if (!stations.length) {
+    list.innerHTML = '<div class="empty-list">局がありません。下のフォームから追加してください。</div>';
+    return;
+  }
+
+  let lastCat = null;
+  stations.forEach((s, i) => {
+    if (s.category !== lastCat) {
+      const div = document.createElement('div');
+      div.className = 'cat-divider';
+      div.textContent = s.category;
+      list.appendChild(div);
+      lastCat = s.category;
+    }
+
+    const isExt = !!s.website;
+    const item = document.createElement('div');
+    item.className = 'station-item' + (editingIdx === i ? ' editing' : '');
+    item.dataset.idx = i;
+
+    item.innerHTML = `
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <div class="station-info">
+        <div class="station-name">${escHtml(s.name)}</div>
+        <div class="station-meta">
+          <span class="station-cat">${escHtml(s.category)}</span>
+          ${isExt ? '<span class="tag-ext">外部</span>' : ''}
+          <span class="station-url">${escHtml(s.url || s.website || '')}</span>
+        </div>
+      </div>
+      <div class="station-actions">
+        <button class="btn small" onclick="toggleEdit(${i})">${editingIdx === i ? '閉じる' : '編集'}</button>
+        <button class="btn small danger" onclick="deleteStation(${i})">削除</button>
+      </div>
+    `;
+
+    if (editingIdx === i) {
+      const form = buildEditForm(i, s);
+      item.appendChild(form);
+    }
+
+    list.appendChild(item);
+  });
+
+  setupDrag();
+}
+
+function buildEditForm(i, s) {
+  const isExt = !!s.website;
+  const div = document.createElement('div');
+  div.className = 'edit-form';
+  div.innerHTML = `
+    <div class="field full">
+      <div class="toggle-ext">
+        <input type="checkbox" id="ei-ext-${i}" ${isExt ? 'checked' : ''} onchange="toggleEditExt(${i})" />
+        <label for="ei-ext-${i}">外部サイト表示モード</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>局名 (name)*</label>
+      <input id="ei-name-${i}" type="text" value="${escAttr(s.name)}" />
+    </div>
+    <div class="field">
+      <label>カテゴリー (category)*</label>
+      ${buildCatSelect('ei-cat-' + i, s.category)}
+    </div>
+    <div class="field full" id="ei-url-wrap-${i}" ${isExt ? 'style="display:none"' : ''}>
+      <label>ストリームURL (url)*</label>
+      <input id="ei-url-${i}" type="text" value="${escAttr(s.url || '')}" />
+    </div>
+    <div class="field full" id="ei-web-wrap-${i}" ${!isExt ? 'style="display:none"' : ''}>
+      <label>公式サイトURL (website)*</label>
+      <input id="ei-web-${i}" type="text" value="${escAttr(s.website || '')}" />
+    </div>
+    <div class="field full">
+      <label>説明 (desc) — 省略可</label>
+      <input id="ei-desc-${i}" type="text" value="${escAttr(s.desc || '')}" />
+    </div>
+    <div class="field full">
+      <label>タイムゾーン (timezone) — 省略可</label>
+      ${buildTzSelect('ei-tz-' + i, s.timezone || '')}
+    </div>
+    <div class="field full">
+      <div class="btn-row" style="margin-top:4px;">
+        <button class="btn primary small" onclick="saveEdit(${i})">保存</button>
+        <button class="btn ghost small" onclick="cancelEdit()">キャンセル</button>
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+function buildCatSelect(id, val) {
+  const cats = ['News','Music','Jazz','Ambient','Lo-fi','City Pop','Classic Rock','Pop','Eclectic','Hottest Hits','Talk','Sports','Other'];
+  return `<select id="${id}">${cats.map(c => `<option${c === val ? ' selected' : ''}>${c}</option>`).join('')}</select>`;
+}
+
+function buildTzSelect(id, val) {
+  const tzs = [['','— なし —'],['Asia/Tokyo','Asia/Tokyo'],['Asia/Manila','Asia/Manila'],['Asia/Seoul','Asia/Seoul'],['Asia/Shanghai','Asia/Shanghai'],['Asia/Singapore','Asia/Singapore'],['Australia/Sydney','Australia/Sydney'],['Europe/London','Europe/London'],['Europe/Paris','Europe/Paris'],['America/New_York','America/New_York'],['America/Los_Angeles','America/Los_Angeles'],['UTC','UTC']];
+  return `<select id="${id}">${tzs.map(([v,l]) => `<option value="${v}"${v === val ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+}
+
+function toggleEdit(i) {
+  editingIdx = (editingIdx === i) ? null : i;
+  renderList();
+  if (editingIdx !== null) {
+    setTimeout(() => {
+      const el = document.querySelector(`.station-item[data-idx="${i}"]`);
+      if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 50);
+  }
+}
+
+function cancelEdit() { editingIdx = null; renderList(); }
+
+function toggleEditExt(i) {
+  const isExt = document.getElementById('ei-ext-' + i).checked;
+  document.getElementById('ei-url-wrap-' + i).style.display = isExt ? 'none' : '';
+  document.getElementById('ei-web-wrap-' + i).style.display = isExt ? '' : 'none';
+}
+
+function saveEdit(i) {
+  const isExt = document.getElementById('ei-ext-' + i).checked;
+  const name = document.getElementById('ei-name-' + i).value.trim();
+  const cat = document.getElementById('ei-cat-' + i).value;
+  const url = document.getElementById('ei-url-' + i).value.trim();
+  const web = document.getElementById('ei-web-' + i).value.trim();
+  const desc = document.getElementById('ei-desc-' + i).value.trim();
+  const tz = document.getElementById('ei-tz-' + i).value;
+
+  if (!name) { alert('局名は必須です'); return; }
+  if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
+  if (isExt && !web) { alert('公式サイトURLは必須です'); return; }
+
+  const s = { name, category: cat };
+  if (isExt) s.website = web; else s.url = url;
+  if (desc) s.desc = desc;
+  if (tz) s.timezone = tz;
+
+  stations[i] = s;
+  editingIdx = null;
+  renderList();
+}
+
+function deleteStation(i) {
+  if (!confirm(`「${stations[i].name}」を削除しますか？`)) return;
+  stations.splice(i, 1);
+  if (editingIdx === i) editingIdx = null;
+  else if (editingIdx > i) editingIdx--;
+  renderList();
+}
+
+// ── ADD FORM ──
+function toggleAddExt() {
+  const isExt = document.getElementById('add-is-ext').checked;
+  document.getElementById('add-url-field').style.display = isExt ? 'none' : '';
+  document.getElementById('add-web-field').style.display = isExt ? '' : 'none';
+}
+
+function addStation() {
+  const isExt = document.getElementById('add-is-ext').checked;
+  const name = document.getElementById('add-name').value.trim();
+  const cat = document.getElementById('add-cat').value;
+  const url = document.getElementById('add-url').value.trim();
+  const web = document.getElementById('add-web').value.trim();
+  const desc = document.getElementById('add-desc').value.trim();
+  const tz = document.getElementById('add-tz').value;
+
+  if (!name) { alert('局名は必須です'); return; }
+  if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
+  if (isExt && !web) { alert('公式サイトURLは必須です'); return; }
+
+  const s = { name, category: cat };
+  if (isExt) s.website = web; else s.url = url;
+  if (desc) s.desc = desc;
+  if (tz) s.timezone = tz;
+
+  stations.push(s);
+  clearAddForm();
+  renderList();
+
+  setTimeout(() => {
+    const items = document.querySelectorAll('.station-item');
+    if (items.length) items[items.length - 1].scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 50);
+}
+
+function clearAddForm() {
+  ['add-name','add-url','add-web','add-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('add-cat').selectedIndex = 0;
+  document.getElementById('add-tz').selectedIndex = 0;
+  document.getElementById('add-is-ext').checked = false;
+  document.getElementById('add-url-field').style.display = '';
+  document.getElementById('add-web-field').style.display = 'none';
+}
+
+// ── STEP 3 ──
+function showOutput() {
+  if (editingIdx !== null) {
+    if (!confirm('編集中の局があります。保存せずに出力しますか？')) return;
+    editingIdx = null;
+  }
+  const json = JSON.stringify(stations, null, 2);
+  document.getElementById('output-text').value = json;
+  setStep(3);
+  document.getElementById('panel-output').style.display = '';
+  document.getElementById('panel-output').scrollIntoView({behavior:'smooth'});
+}
+
+function backToEdit() {
+  document.getElementById('panel-output').style.display = 'none';
+  setStep(2);
+}
+
+function copyOutput() {
+  const text = document.getElementById('output-text').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('copy-confirm');
+    el.style.display = 'inline';
+    setTimeout(() => el.style.display = 'none', 2500);
+  });
+}
+
+// ── DRAG & DROP ──
+function setupDrag() {
+  const items = document.querySelectorAll('.station-item');
+  let dragSrc = null;
+
+  items.forEach(item => {
+    item.setAttribute('draggable', true);
+    item.addEventListener('dragstart', e => {
+      dragSrc = item;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => item.style.opacity = '0.4', 0);
+    });
+    item.addEventListener('dragend', () => { item.style.opacity = ''; });
+    item.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragSrc === item) return;
+      const fromIdx = parseInt(dragSrc.dataset.idx);
+      const toIdx = parseInt(item.dataset.idx);
+      const moved = stations.splice(fromIdx, 1)[0];
+      stations.splice(toIdx, 0, moved);
+      editingIdx = null;
+      renderList();
+    });
+  });
+}
+
+// ── UTILS ──
+function setStep(n) {
+  ['s1','s2','s3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.className = 'step' + (i + 1 < n ? ' done' : i + 1 === n ? ' current' : '');
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
