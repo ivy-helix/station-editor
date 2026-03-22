@@ -123,11 +123,11 @@ header .spacer{flex:1;}
   border-radius:10px;background:var(--blue);color:#0d0d0f;letter-spacing:0.06em;}
 .tag-vol{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;padding:2px 7px;
   border-radius:10px;background:var(--surface2);border:1px solid var(--border2);
-  color:var(--muted);display:flex;align-items:center;gap:4px;}
+  color:var(--muted);display:inline-flex;align-items:center;gap:4px;}
 .tag-vol.custom{border-color:var(--amber-dim);color:var(--amber);}
 .station-actions{display:flex;gap:6px;flex-shrink:0;}
 
-/* ── EDIT FORM ── */
+/* ── EDIT / ADD FORM ── */
 .edit-form{width:100%;border-top:1px solid var(--border);padding-top:14px;
   margin-top:4px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .edit-form .full{grid-column:1/-1;}
@@ -144,17 +144,19 @@ header .spacer{flex:1;}
 
 /* ── VOLUME SLIDER ── */
 .vol-field{display:flex;flex-direction:column;gap:6px;}
-.vol-row{display:flex;align-items:center;gap:10px;}
+.vol-row{display:flex;align-items:center;gap:12px;}
 .vol-slider{-webkit-appearance:none;flex:1;height:4px;border-radius:2px;
-  background:var(--border2);outline:none;cursor:pointer;accent-color:var(--amber);}
+  background:var(--border2);outline:none;cursor:pointer;}
 .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
   border-radius:50%;background:var(--amber);cursor:pointer;transition:transform 0.1s;}
 .vol-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
 .vol-slider::-moz-range-thumb{width:16px;height:16px;border:none;border-radius:50%;
   background:var(--amber);cursor:pointer;}
-.vol-num{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text);
-  min-width:32px;text-align:right;}
+.vol-num{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:var(--text);
+  min-width:36px;text-align:right;font-weight:500;}
 .vol-hint{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);}
+.vol-marks{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;
+  font-size:0.6rem;color:var(--muted);padding:0 1px;margin-top:-2px;}
 
 /* ── ADD FORM ── */
 .add-section{background:var(--surface2);border:1px dashed var(--border2);
@@ -308,13 +310,17 @@ header .spacer{flex:1;}
             </div>
             <div class="field full">
               <div class="vol-field">
-                <label>音量 (volume) — デフォルト 0.8</label>
+                <label>音量 (volume)</label>
                 <div class="vol-row">
-                  <input class="vol-slider" type="range" id="add-vol" min="0" max="1" step="0.05" value="0.8"
-                    oninput="document.getElementById('add-vol-num').textContent=parseFloat(this.value).toFixed(2)" />
+                  <input class="vol-slider" type="range" id="add-vol"
+                    min="0" max="4" step="0.05" value="0.8"
+                    oninput="syncVolNum('add-vol','add-vol-num')" />
                   <span class="vol-num" id="add-vol-num">0.80</span>
                 </div>
-                <span class="vol-hint">0.00（無音）〜 1.00（最大）</span>
+                <div class="vol-marks">
+                  <span>0.00</span><span>1.00</span><span>2.00</span><span>3.00</span><span>4.00</span>
+                </div>
+                <span class="vol-hint">0.00（無音）〜 1.00（通常最大）〜 4.00（ブースト）　デフォルト: 0.80</span>
               </div>
             </div>
           </div>
@@ -360,6 +366,19 @@ let editingKey = null;
 let renamingCat = null;
 
 const DEFAULT_VOLUME = 0.8;
+const VOL_MIN = 0;
+const VOL_MAX = 4;
+const VOL_STEP = 0.05;
+
+// ── VOLUME HELPER ────────────────────────
+function syncVolNum(sliderId, numId) {
+  const val = parseFloat(document.getElementById(sliderId).value);
+  document.getElementById(numId).textContent = val.toFixed(2);
+}
+
+function roundVol(v) {
+  return Math.round(parseFloat(v) * 100) / 100;
+}
 
 // ── STEP 1 ──────────────────────────────
 function loadStations() {
@@ -748,11 +767,15 @@ function buildEditForm(gi, si, s) {
       <div class="vol-field">
         <label>音量 (volume)</label>
         <div class="vol-row">
-          <input class="vol-slider" type="range" id="ei-vol-${k}" min="0" max="1" step="0.05" value="${vol}"
-            oninput="document.getElementById('ei-vol-num-${k}').textContent=parseFloat(this.value).toFixed(2)" />
+          <input class="vol-slider" type="range" id="ei-vol-${k}"
+            min="${VOL_MIN}" max="${VOL_MAX}" step="${VOL_STEP}" value="${vol}"
+            oninput="syncVolNum('ei-vol-${k}','ei-vol-num-${k}')" />
           <span class="vol-num" id="ei-vol-num-${k}">${vol.toFixed(2)}</span>
         </div>
-        <span class="vol-hint">0.00（無音）〜 1.00（最大）　デフォルト: 0.80</span>
+        <div class="vol-marks">
+          <span>0.00</span><span>1.00</span><span>2.00</span><span>3.00</span><span>4.00</span>
+        </div>
+        <span class="vol-hint">0.00（無音）〜 1.00（通常最大）〜 4.00（ブースト）　デフォルト: 0.80</span>
       </div>
     </div>
     <div class="field full">
@@ -779,7 +802,7 @@ function saveEdit(gi, si, k) {
   const web = document.getElementById('ei-web-' + k).value.trim();
   const desc = document.getElementById('ei-desc-' + k).value.trim();
   const tz = document.getElementById('ei-tz-' + k).value;
-  const vol = parseFloat(document.getElementById('ei-vol-' + k).value);
+  const vol = roundVol(document.getElementById('ei-vol-' + k).value);
 
   if (!name) { alert('局名は必須です'); return; }
   if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
@@ -789,7 +812,7 @@ function saveEdit(gi, si, k) {
   if (isExt) s.website = web; else s.url = url;
   if (desc) s.desc = desc;
   if (tz) s.timezone = tz;
-  s.volume = Math.round(vol * 100) / 100;
+  s.volume = vol;
 
   const oldCat = groups[gi].cat;
   if (newCat !== oldCat) {
@@ -829,7 +852,7 @@ function addStation() {
   const web = document.getElementById('add-web').value.trim();
   const desc = document.getElementById('add-desc').value.trim();
   const tz = document.getElementById('add-tz').value;
-  const vol = parseFloat(document.getElementById('add-vol').value);
+  const vol = roundVol(document.getElementById('add-vol').value);
 
   if (!name) { alert('局名は必須です'); return; }
   if (!isExt && !url) { alert('ストリームURLは必須です'); return; }
@@ -840,7 +863,7 @@ function addStation() {
   if (isExt) s.website = web; else s.url = url;
   if (desc) s.desc = desc;
   if (tz) s.timezone = tz;
-  s.volume = Math.round(vol * 100) / 100;
+  s.volume = vol;
 
   const gi = groups.findIndex(g => g.cat === cat);
   if (gi >= 0) groups[gi].stations.push(s);
@@ -860,8 +883,7 @@ function clearAddForm() {
   document.getElementById('add-is-ext').checked = false;
   document.getElementById('add-url-field').style.display = '';
   document.getElementById('add-web-field').style.display = 'none';
-  const volSlider = document.getElementById('add-vol');
-  volSlider.value = DEFAULT_VOLUME;
+  document.getElementById('add-vol').value = DEFAULT_VOLUME;
   document.getElementById('add-vol-num').textContent = DEFAULT_VOLUME.toFixed(2);
 }
 
